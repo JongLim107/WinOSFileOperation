@@ -1,5 +1,5 @@
 # coding=utf-8
-# Python2
+# Python3
 
 import os
 import xlrd
@@ -51,10 +51,10 @@ def readFile(file1, file2):
 
 
 if __name__ == "__main__":
-    print '\n>>> start ' + ctime() + '\n'
+    print('\n>>> start ' + ctime() + '\n')
     file1 = os.getcwd() + '\\' + xlsName[0]
     file2 = os.getcwd() + '\\' + xlsName[1]
     readFile(file1, file2)
 
     workbook.save(filename='D:\\Python\\PythonSpider\\MoveFiles.xls')
-    print '\n<<< end ' + ctime()
+    print('\n<<< end ' + ctime())
