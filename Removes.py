@@ -9,7 +9,7 @@ from time import ctime
 count = cnt = ct = 1
 workbook = Workbook()
 worksheet = workbook.worksheets[0]
-xlsName = ['Calculate.xls', 'Renamer.xls']
+xlsName = ['Calculate.xls', 'Calculate1.xls']
 
 
 def save2xlsx(fullname, col):
@@ -40,11 +40,13 @@ def readFile(file1, file2):
     for i in range(sheet1.nrows):
         names = rows1[i].split('\\')
         n1 = names[len(names) - 1]
+        n1 = n1.split('.')[0]  # for duplicate images
         save2xlsx(rows1[i], 1)
         for j in range(sheet2.nrows):
             names = rows2[j].split('\\')
             n2 = names[len(names) - 1]
-            if(n1 == n2):
+            # if n1 == n2:  # for duplicate mp3
+            if n1 in n2:  # for duplicate images
                 save2xlsx(rows2[j], 2)
                 removeFile(rows2[j])
                 pass
@@ -56,5 +58,5 @@ if __name__ == "__main__":
     file2 = os.getcwd() + '\\' + xlsName[1]
     readFile(file1, file2)
 
-    workbook.save(filename='D:\\Python\\PythonSpider\\Removes.xls')
+    workbook.save(filename='D:\\PythonProject\\PythonSpider\\RemovesJPG2.xls')
     print('\n<<< end ' + ctime())
