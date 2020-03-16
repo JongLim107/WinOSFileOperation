@@ -8,7 +8,7 @@ import urllib2
 import re
 import os
 
-print ">>> start %s" % ctime()
+print(">>> start %s" % ctime())
 
 url = "http://dl.upload08.com/files/Serial/Friends/"
 html = urllib2.urlopen(url).read()  # Open and Get raw data from website
@@ -19,7 +19,7 @@ path = os.path.abspath(os.curdir)  # Get currently path
 
 
 def graphsub(uri, name):
-    print (">>>>> run %s" % ctime())
+    print(">>>>> run %s" % ctime())
     html2 = urllib2.urlopen(uri).read()
     nameArr = re.findall('href="(.*?)"', html2)
 
@@ -32,7 +32,7 @@ def graphsub(uri, name):
         if("../" in nstr):
             pass
         else:
-            # print >> File, uri+nstr
+            # print(>> File, uri+nstr)
             File.write(uri+nstr + "\n")
     File.close()
 
@@ -46,7 +46,7 @@ for uri in urls:
         uri = url+uri+"1080p%20x265/"
         threads.append(threading.Thread(target=graphsub,
                                         args=(str(uri), 'Season%d' % i)))
-        print (">>>>> add %s" % ctime())
+        print(">>>>> add %s" % ctime())
         i += 1
 
 if __name__ == '__main__':
@@ -57,4 +57,4 @@ if __name__ == '__main__':
 
     t.join()
 
-    print (">>> stop! %s" % ctime())
+    print(">>> stop! %s" % ctime())
