@@ -11,9 +11,10 @@ from xlutils.copy import copy
 
 workDir = os.getcwd()+'/'
 destPath = workDir + 'Download/'
-newExcel = workDir+'PictureUrls_copy.xls'
+newExcel = workDir+'PictureUrlsResult.xls'
 srcExcel = 'PictureUrlsFinal.xls'
-maxRetry = 4
+maxRetry = 5
+lastStop = 12
 dosum = False
 
 
@@ -69,7 +70,7 @@ def tryDownload(meal, cnt=1):
     name = meal['name']
     if meal['state'] != '':
         # Update: if last time is successful, just skip this onw
-        return 7
+        return lastStop
     if os.path.exists(destPath+name) == True:
         print('*** '+name+' is exist already.')
         return 0
@@ -84,8 +85,8 @@ def tryDownload(meal, cnt=1):
 
 
 def containSub(subs, sub):
-    # for i in range(len(subs)):
-    for i in range(10000):
+    for i in range(len(subs)):
+        # for i in range(20001):
         if sub == subs[i]:
             return i
     return -1
@@ -98,25 +99,42 @@ def localFile2Excel():
     sheet = rb.sheet_by_index(0)
     subs = sheet.col_values(3)
     status = sheet.col_values(6)
-
     res = os.listdir(destPath)
     for name in res:
         arr = name.split('-')
         index = containSub(subs, arr[len(arr) - 1])
-        if index != -1:
-            sh.write(index, 7, 1)
-            if status[index].startswith('All') == True:
-                sh.write(index, 6, 'Succeed at: 8')
-            if status[index].endswith('0') == True:
-                sh.write(index, 6, 'Succeed at: 8')
-        else:
-            sh.write(index, 6, 'All Failed')
+        if index == -1:
+            continue
+        sh.write(index, 7, 1)
+        if status[index].startswith('All') == True:
+            sh.write(index, 6, 'Succeed at: 10')
     wb.save(newExcel)
     return
 
 
+def moveFile(name):
+    try:
+        os.rename(destPath+name, workDir+'Removal/'+name)
+    except:
+        pass
+
+
+def moveDuplicate():
+    res = os.listdir(destPath)
+    for name in res:
+        if name.find('-') < 0:
+            moveFile(name)
+        elif not name.endswith('JPEG'):
+            moveFile(name)
+        else:
+            arr = name.split('-')
+            if len(arr) < 2:
+                moveFile(name)
+
+
 if __name__ == "__main__":
     if dosum == True:
+        moveDuplicate()
         localFile2Excel()
         exit()
 
@@ -132,7 +150,7 @@ if __name__ == "__main__":
 
     rows = readFile(srcExcel, rb)
     length = len(rows)
-    for i in range(10000, 20001):
+    for i in range(1, length):
         value = tryDownload(rows[i])
         prin = False
         if value != maxRetry:
@@ -145,9 +163,9 @@ if __name__ == "__main__":
         if prin == True:
             print('>>> ' + str(round(i/length*100, 2)) + '%', i, value)
 
-        if value != 7:
-            res = 'All Failed' if value == maxRetry else (
-                'Succeed at: ' + str(value))
+        if value != lastStop:
+            res = 'All Failed: 12' if value == maxRetry else (
+                'Succeed at: ' + str(lastStop+value))
             newSheet.write(i, 6, res)
 
         if i % 100 == 1:
