@@ -13,7 +13,11 @@ workDir = os.getcwd()+'/'
 destPath = workDir + 'Download/'
 newExcel = workDir+'PictureUrlsResult.xls'
 srcExcel = 'PictureUrlsFinal.xls'
-maxRetry = 5
+iconColumn = 3
+statusColumn = 6
+staColumn = 7
+newStaColumn = 8
+maxRetry = 4
 lastStop = 12
 dosum = False
 
@@ -43,8 +47,8 @@ def readFile(file, rb):
     else:
         sheet = rb.sheet_by_index(0)
         names = sheet.col_values(2)
-        status = sheet.col_values(7)
-        subName = sheet.col_values(3)
+        status = sheet.col_values(staColumn)
+        subName = sheet.col_values(iconColumn)
         for i in range(0, len(subName)):
             name = names[i].rstrip().replace(' ', '_')
             result.append({
@@ -68,7 +72,7 @@ def checkFile(name):
 
 def tryDownload(meal, cnt=1):
     name = meal['name']
-    if meal['state'] != '':
+    if meal['state'] == 1:
         # Update: if last time is successful, just skip this onw
         return lastStop
     if os.path.exists(destPath+name) == True:
@@ -97,17 +101,17 @@ def localFile2Excel():
     wb = copy(rb)
     sh = wb.get_sheet(0)
     sheet = rb.sheet_by_index(0)
-    subs = sheet.col_values(3)
-    status = sheet.col_values(6)
+    subs = sheet.col_values(iconColumn)
+    status = sheet.col_values(statusColumn)
     res = os.listdir(destPath)
     for name in res:
         arr = name.split('-')
         index = containSub(subs, arr[len(arr) - 1])
         if index == -1:
             continue
-        sh.write(index, 7, 1)
+        sh.write(index, newStaColumn, 1)
         if status[index].startswith('All') == True:
-            sh.write(index, 6, 'Succeed at: 10')
+            sh.write(index, statusColumn, 'Succeed at: '+str(lastStop-1))
     wb.save(newExcel)
     return
 
@@ -153,22 +157,22 @@ if __name__ == "__main__":
     for i in range(1, length):
         value = tryDownload(rows[i])
         prin = False
-        if value != maxRetry:
+        if value != maxRetry and value != lastStop:
             prin = True
             # Update: add new flag to indicate sucessful or not, easy for summation
-            newSheet.write(i, 7, 1)
+            newSheet.write(i, newStaColumn, 1)
         else:
-            prin = i % 10 == 0
+            prin = i % 5 == 0
 
         if prin == True:
             print('>>> ' + str(round(i/length*100, 2)) + '%', i, value)
 
         if value != lastStop:
-            res = 'All Failed: 12' if value == maxRetry else (
+            res = ('All Failed: ' + str(lastStop+maxRetry-1)) if value == maxRetry else (
                 'Succeed at: ' + str(lastStop+value))
-            newSheet.write(i, 6, res)
+            newSheet.write(i, statusColumn, res)
 
-        if i % 100 == 1:
+        if i % 50 == 0:
             workBook.save(newExcel)
             time.sleep(5)
     workBook.save(newExcel)
