@@ -15,10 +15,9 @@ newExcel = workDir+'PictureUrlsResult.xls'
 srcExcel = 'PictureUrlsFinal.xls'
 iconColumn = 3
 statusColumn = 6
-staColumn = 7
 newStaColumn = 8
-maxRetry = 4
-lastStop = 12
+maxRetry = 6
+lastStop = 17
 dosum = False
 
 
@@ -46,14 +45,12 @@ def readFile(file, rb):
         return result
     else:
         sheet = rb.sheet_by_index(0)
-        names = sheet.col_values(2)
-        status = sheet.col_values(staColumn)
+        status = sheet.col_values(statusColumn)
         subName = sheet.col_values(iconColumn)
         for i in range(0, len(subName)):
-            name = names[i].rstrip().replace(' ', '_')
             result.append({
-                'name': name+'-'+subName[i],
-                'state': status[i],
+                'name': subName[i],
+                'state': 1 if status[i].startswith('Suc') else 0,
                 'url': 'https://vhzc.hpb.gov.sg/vhz/phs/capi/cloud/getUserFoodImage.ashx?Service=hpbphs&name='+subName[i]+'&mime=image/jpeg'
             })
             # reName(name+'.jpeg', name+'-'+subName[i])
@@ -105,13 +102,12 @@ def localFile2Excel():
     status = sheet.col_values(statusColumn)
     res = os.listdir(destPath)
     for name in res:
-        arr = name.split('-')
-        index = containSub(subs, arr[len(arr) - 1])
+        index = containSub(subs, name)
         if index == -1:
             continue
         sh.write(index, newStaColumn, 1)
         if status[index].startswith('All') == True:
-            sh.write(index, statusColumn, 'Succeed at: '+str(lastStop-1))
+            sh.write(index, statusColumn, 'Succeed at: '+str(lastStop+1))
     wb.save(newExcel)
     return
 
@@ -136,9 +132,21 @@ def moveDuplicate():
                 moveFile(name)
 
 
+def rename():
+    res = os.listdir(destPath)
+    for name in res:
+        arr = name.split('-')
+        if len(arr) > 1:
+            try:
+                os.rename(destPath+name, destPath+arr[len(arr) - 1])
+            except:
+                pass
+
+
 if __name__ == "__main__":
     if dosum == True:
-        moveDuplicate()
+        # moveDuplicate()
+        # rename()
         localFile2Excel()
         exit()
 
@@ -152,9 +160,10 @@ if __name__ == "__main__":
     if os.path.exists(newExcel):
         os.remove(newExcel)
 
+    steps = start = 1
     rows = readFile(srcExcel, rb)
     length = len(rows)
-    for i in range(1, length):
+    for i in range(start, length):
         value = tryDownload(rows[i])
         prin = False
         if value != maxRetry and value != lastStop:
@@ -171,8 +180,11 @@ if __name__ == "__main__":
             res = ('All Failed: ' + str(lastStop+maxRetry-1)) if value == maxRetry else (
                 'Succeed at: ' + str(lastStop+value))
             newSheet.write(i, statusColumn, res)
+            if value != 0:
+                steps += 1
 
-        if i % 50 == 0:
+        if steps % 200 == 0:
             workBook.save(newExcel)
-            time.sleep(5)
+        if steps % 20 == 0:
+            time.sleep(10)
     workBook.save(newExcel)
